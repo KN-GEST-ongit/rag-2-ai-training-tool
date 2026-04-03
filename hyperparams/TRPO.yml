@@ -1,0 +1,9 @@
+CartPole-v1:
+  policy: 'MlpPolicy'
+  n_timesteps: 100000
+
+WebsocketPong-v0:
+  policy: 'MlpPolicy'
+  n_timesteps: 200000
+  state_stack: 3
+  
