@@ -1,7 +1,7 @@
 import os
 import glob
 import numpy as np
-import gym
+import gymnasium as gym
 import difflib
 import yaml
 import pickle
@@ -10,7 +10,7 @@ import pickle
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
 from sb3_contrib import ARS, TRPO, QRDQN, TQC, MaskablePPO
-from typing import Type, Dict, Set, Optional, Any
+from typing import Any
 from argparse import Action
 from src.wrappers import NormObsWrapper, NormRewWrapper
 
@@ -23,7 +23,7 @@ def is_websocket_env(env: gym.Env) -> bool:
 
 
 def check_env_exist(env_name: str) -> None:
-    registered_envs = set(gym.envs.registry.env_specs.keys())
+    registered_envs = set(gym.registry.keys())
     if env_name not in registered_envs:
         try:
             closest_match = difflib.get_close_matches(env_name, registered_envs, n=1)[0]
@@ -33,7 +33,7 @@ def check_env_exist(env_name: str) -> None:
 
 
 # Copied from source
-ALGORITHMS: Dict[str, Type[BaseAlgorithm]] = {
+ALGORITHMS: dict[str, type[BaseAlgorithm]] = {
     "A2C": A2C,
     "DDPG": DDPG,
     "DQN": DQN,
@@ -49,7 +49,7 @@ ALGORITHMS: Dict[str, Type[BaseAlgorithm]] = {
     "MaskablePPO": MaskablePPO
 }
 
-BLOCKED_ALGORITHMS_WS: Set[str] = {"DDPG", "SAC", "TD3", "ARS", "TQC", "MaskablePPO"}
+BLOCKED_ALGORITHMS_WS: set[str] = {"DDPG", "SAC", "TD3", "ARS", "TQC", "MaskablePPO"}
 
 
 def get_latest_run_id(log_path: str, env_name: str) -> int:
@@ -68,7 +68,7 @@ def get_model_path(
     algo: str,
     env_name: str,
     load_best: bool = False,
-    load_checkpoint: Optional[str] = None,
+    load_checkpoint: str | None = None,
     load_last_checkpoint: bool = False,
 ) -> tuple[str, str, str]:
     if exp_id == 0:
@@ -121,8 +121,8 @@ class ConvertToDict(Action):
         setattr(namespace, self.dest, arg_dict)
 
 
-def get_saved_hyperparams(stats_path: str) -> Dict[str, Any]:
-    hyperparams: Dict[str, Any] = {}
+def get_saved_hyperparams(stats_path: str) -> dict[str, Any]:
+    hyperparams: dict[str, Any] = {}
     if not os.path.isdir(stats_path):
         return hyperparams
     else:
@@ -133,8 +133,8 @@ def get_saved_hyperparams(stats_path: str) -> Dict[str, Any]:
     return hyperparams
 
 
-def get_saved_stats(stats_path: str) -> Dict[str, Any]:
-    stats: Dict = {}
+def get_saved_stats(stats_path: str) -> dict[str, Any]:
+    stats: dict = {}
     if not os.path.isdir(stats_path):
         return stats
     else:
@@ -145,7 +145,7 @@ def get_saved_stats(stats_path: str) -> Dict[str, Any]:
     return stats
 
 
-def restore_env(env_name: str, config: Dict[str, Any], stats: Dict, training=True):
+def restore_env(env_name: str, config: dict[str, Any], stats: dict, training=True):
     env = gym.make(env_name)
     n_stack = config.get("state_stack", 0)
     norm_obs = config.get("norm_obs", False)
@@ -155,5 +155,5 @@ def restore_env(env_name: str, config: Dict[str, Any], stats: Dict, training=Tru
     if norm_reward:
         env = NormRewWrapper(env, stats, training)
     if n_stack > 1:
-        env = gym.wrappers.FrameStack(env, n_stack)
+        env = gym.wrappers.FrameStackObservation(env, n_stack)
     return env

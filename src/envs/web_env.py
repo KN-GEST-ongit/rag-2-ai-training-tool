@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from gym import Env
+from gymnasium import Env
 import threading
 
 from threading import Event
@@ -11,13 +11,13 @@ logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s -
 
 
 class InterruptableEvent(threading.Event):
-    def wait(self, timeout=None):
+    def wait(self, timeout: float | None = None) -> bool:
         wait = super().wait  # get once, use often
         if timeout is None:
             while not wait(0.01):
                 pass
-        else:
-            wait(timeout)
+            return True
+        return wait(timeout)
 
 
 class WebsocketEnv(Env, ABC):
@@ -66,7 +66,7 @@ class WebsocketEnv(Env, ABC):
         return self._curr_observation
 
     @curr_observation.setter
-    def curr_observation(self, value: np.array):
+    def curr_observation(self, value: np.ndarray):
         self._curr_observation = value
 
     @property
@@ -75,8 +75,17 @@ class WebsocketEnv(Env, ABC):
             self._timeout = 5
         return self._timeout
 
+    @abstractmethod
+    def reset(self, *, seed: int | None = None, options: dict | None = None) -> tuple[np.ndarray, dict]:
+        super().reset(seed=seed)
+        return self.curr_observation, {}
+
+    @abstractmethod
+    def step(self, action) -> tuple[np.ndarray, float, bool, bool, dict]:
+        raise NotImplementedError
+
     @final
-    def get_observation(self) -> np.array:
+    def get_observation(self) -> np.ndarray:
         self._new_obs_event.wait()
         self._new_obs_event.clear()
         return self.curr_observation
@@ -90,7 +99,7 @@ class WebsocketEnv(Env, ABC):
         raise NotImplementedError
 
     @final
-    def log_repeated_observation(self, observation: np.array, method: str) -> None:
+    def log_repeated_observation(self, observation: np.ndarray, method: str) -> None:
         if self.__prev_observation is not None and np.array_equal(observation, self.__prev_observation):
             self.__repetition_count += 1
             logging.warning("Repeated observation #%d in method %s", self.__repetition_count, method)

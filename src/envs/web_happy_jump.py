@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.envs.web_env import WebsocketEnv
-from gym.spaces import Box, Discrete
+from gymnasium.spaces import Box, Discrete
 
 
 class WebsocketHappyJump(WebsocketEnv):
@@ -51,33 +51,39 @@ class WebsocketHappyJump(WebsocketEnv):
     def get_done(self) -> bool:
         return self.state['failCounter'] > self.prevFailCounter
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
         if not self.first_step:
             self.action['move'] = 0
             self.new_action_event.set()
         self.prevScore = 0
-        self.prevFailCounter = self.state['failCounter']
+        self.prevFailCounter = self.state['failCounter'] if self.state else 0
         observation = self.get_observation()
         self.log_repeated_observation(observation, "reset")
-        return observation
+
+        return observation, {}
 
     def step(self, action: int):
         if self.first_step:
             self.first_step = False
+
         self.action['move'] = self.action_map[int(action)]
         self.new_action_event.set()
         observation = self.get_observation()
         self.log_repeated_observation(observation, "step")
-        done = self.get_done()
+        terminated = self.get_done()
+        truncated = False
+
         if self.state['score'] > self.prevScore:
             self.prevScore = self.state['score']
             reward = 1
-        elif done is True:
+        elif terminated:
             reward = -1
         else:
             reward = 0
+
         info = {}
-        return observation, reward, done, info
+        return observation, reward, terminated, truncated, info
 
     def return_prediction(self) -> dict:
         if self.new_action_event.wait(timeout=self.timeout):

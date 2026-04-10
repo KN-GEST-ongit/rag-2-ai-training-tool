@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 
 from typing import List, Tuple, Type
 from src.handlers import AiHandler
