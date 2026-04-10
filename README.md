@@ -6,6 +6,11 @@ Repozytorium jest forkiem projektu <https://github.com/theImmortalCoders/rag-2-a
 
 Autor: [@bkrowka](https://github.com/bkrowka)
 
+### Aktualizacja
+Projekt został zrefaktoryzowany. Oryginalna wersja (Python 3.9 / Gym) została zaktualizowana do:
+- **Python 3.13+**
+- **Gymnasium**
+
 ## Instalacja i konfiguracja
 
 1. **Utworzenie i aktywacja wirtualnego środowiska**
@@ -20,10 +25,10 @@ Autor: [@bkrowka](https://github.com/bkrowka)
      venv\Scripts\Activate
      ```
 
-2. **Zmiana wersji pip, setuptools i wheel**
+2. **Aktualizacja narzędzi pakietów (opcjonalnie):**
 
    ```bash
-   python -m pip install --upgrade pip==21.1.2 setuptools==66 wheel==0.38.0
+   python -m pip install --upgrade pip setuptools wheel
    ```
 
 3. **Instalacja wymaganych pakietów:**

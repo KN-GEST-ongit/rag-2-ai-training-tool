@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.envs.web_env import WebsocketEnv
-from gym.spaces import Box, Discrete
+from gymnasium.spaces import Box, Discrete
 
 
 class WebsocketPong(WebsocketEnv):
@@ -46,30 +46,41 @@ class WebsocketPong(WebsocketEnv):
     def get_done(self) -> bool:
         return self.internalLeftScore == 10 or self.internalRightScore == 10
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
         if not self.first_step:
             self.action['move'] = 0
             self.new_action_event.set()
         self.internalLeftScore = self.internalRightScore = 0
         observation = self.get_observation()
         self.log_repeated_observation(observation, "reset")
-        self.prevScoreLeft = self.state['scoreLeft']
-        self.prevScoreRight = self.state['scoreRight']
-        return observation
+
+        if self.state:
+            self.prevScoreLeft = self.state['scoreLeft']
+            self.prevScoreRight = self.state['scoreRight']
+        else:
+            self.prevScoreLeft = 0
+            self.prevScoreRight = 0
+
+        return observation, {}
 
     def step(self, action: int):
         if self.first_step:
             self.first_step = False
+
         self.action['move'] = self.action_map[int(action)]
         self.new_action_event.set()
         observation = self.get_observation()
         self.log_repeated_observation(observation, "step")
-        done = self.get_done()
+        terminated = self.get_done()
+        truncated = False
+
         reward = 0
         if self.playerId == 0:
             if self.state['scoreLeft'] > self.prevScoreLeft:
                 self.internalLeftScore += 1
                 self.prevScoreLeft = self.state['scoreLeft']
+                reward = 1
             elif self.state['scoreRight'] > self.prevScoreRight:
                 self.internalRightScore += 1
                 self.prevScoreRight = self.state['scoreRight']
@@ -78,12 +89,14 @@ class WebsocketPong(WebsocketEnv):
             if self.state['scoreRight'] > self.prevScoreRight:
                 self.internalRightScore += 1
                 self.prevScoreRight = self.state['scoreRight']
+                reward = 1
             elif self.state['scoreLeft'] > self.prevScoreLeft:
                 self.internalLeftScore += 1
                 self.prevScoreLeft = self.state['scoreLeft']
                 reward = -10
+
         info = {}
-        return observation, reward, done, info
+        return observation, reward, terminated, truncated, info
 
     def return_prediction(self) -> dict:
         if self.new_action_event.wait(timeout=self.timeout):

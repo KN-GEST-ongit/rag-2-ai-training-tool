@@ -1,4 +1,4 @@
-from gym.wrappers import NormalizeObservation, NormalizeReward
+from gymnasium.wrappers import NormalizeObservation, NormalizeReward
 from typing import Dict
 import numpy as np
 
@@ -11,7 +11,7 @@ class NormObsWrapper(NormalizeObservation):
             self.obs_rms.var = stats.get("obs_var", 1.0)
         self.training = training
 
-    def normalize(self, obs):
+    def observation(self, obs: np.ndarray) -> np.ndarray:
         if self.training:
             self.obs_rms.update(obs)
         return (obs - self.obs_rms.mean) / np.sqrt(self.obs_rms.var + self.epsilon)
@@ -25,7 +25,5 @@ class NormRewWrapper(NormalizeReward):
             self.return_rms.var = stats.get("rew_var", 1.0)
         self.training = training
 
-    def normalize(self, rews):
-        if self.training:
-            self.return_rms.update(self.returns)
-        return rews / np.sqrt(self.return_rms.var + self.epsilon)
+    def reward(self, rew: float) -> float:
+        return rew / np.sqrt(self.return_rms.var + self.epsilon)
