@@ -11,7 +11,7 @@ class NormObsWrapper(NormalizeObservation):
             self.obs_rms.var = stats.get("obs_var", 1.0)
         self.training = training
 
-    def observation(self, obs: np.ndarray) -> np.ndarray:
+    def observation(self, obs: np.array) -> np.array:
         if self.training:
             self.obs_rms.update(obs)
         return (obs - self.obs_rms.mean) / np.sqrt(self.obs_rms.var + self.epsilon)
