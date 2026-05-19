@@ -6,3 +6,7 @@ WebsocketPong-v0:
   policy: 'MlpPolicy'
   n_timesteps: 200000
   state_stack: 3
+
+WebsocketCrossyRoad-v0:
+  policy: 'MlpPolicy'
+  n_timesteps: 200000

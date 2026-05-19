@@ -14,3 +14,8 @@ register(
     id='WebsocketHappyJump-v0',
     entry_point='src.envs.web_happy_jump:WebsocketHappyJump',
 )
+
+register(
+    id='WebsocketCrossyRoad-v0',
+    entry_point='src.envs.web_crossy_road:WebsocketCrossyRoad',
+)
