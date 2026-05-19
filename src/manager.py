@@ -1,5 +1,5 @@
 import os
-import gym
+import gymnasium as gym
 import yaml
 import argparse
 import pickle
@@ -15,7 +15,7 @@ from src.route import get_routes
 from src.websocket import find_free_port, run_socket, stop_socket
 from src.wrappers import NormObsWrapper, NormRewWrapper
 from collections import OrderedDict
-from typing import Dict, Any
+from typing import Any
 
 
 class TrainingManager:
@@ -30,8 +30,8 @@ class TrainingManager:
             save_freq: int,
             log_folder: str,
             verbose: int,
-            hyperparameters: dict,
-            config: str
+            hyperparameters: dict | None,
+            config: str | None
     ):
         super().__init__()
         self.args = args
@@ -63,9 +63,9 @@ class TrainingManager:
         self.norm_reward = False
 
     def _load_model(self, env: gym.Env, hyperparams: dict[str, Any]) -> BaseAlgorithm:
-        del hyperparams["policy"]
-        if "policy_kwargs" in hyperparams.keys():
-            del hyperparams["policy_kwargs"]
+        hyperparams.pop("policy", None)
+        hyperparams.pop("policy_kwargs", None)
+
         model = ALGORITHMS[self.algo].load(
             path=self.trained_agent,
             env=env,
@@ -75,7 +75,7 @@ class TrainingManager:
         )
         return model
 
-    def _get_default_parameters(self) -> Dict[str, Any]:
+    def _get_default_parameters(self) -> dict[str, Any]:
         self.env = gym.make(self.env_name)
         self.is_websocket = is_websocket_env(self.env)
         if self.is_websocket and self.algo in BLOCKED_ALGORITHMS_WS:
@@ -96,7 +96,7 @@ class TrainingManager:
             policy = "MlpPolicy" if self.algo != "ARS" else "LinearPolicy"
         return {"policy": policy, "n_timesteps": 1e5}
 
-    def _read_parameters(self) -> Dict[str, Any]:
+    def _read_parameters(self) -> dict[str, Any]:
         if self.stats_path == "":
             with open(self.config) as f:
                 hyperparams_dict = yaml.safe_load(f)
@@ -116,7 +116,7 @@ class TrainingManager:
         hyperparams = OrderedDict([(key, hyperparams[key]) for key in sorted(hyperparams.keys())])
         return hyperparams
 
-    def _preprocess_hyperparams(self, hyperparams: Dict[str, Any]) -> Dict[str, Any]:
+    def _preprocess_hyperparams(self, hyperparams: dict[str, Any]) -> dict[str, Any]:
         _hyperparams = hyperparams.copy()
         if "state_stack" in _hyperparams.keys():
             self.state_stack = _hyperparams["state_stack"]
@@ -133,7 +133,7 @@ class TrainingManager:
         del _hyperparams["n_timesteps"]
         return _hyperparams
 
-    def _setup_env(self, config: Dict[str, Any]) -> gym.Env:
+    def _setup_env(self, config: dict[str, Any]) -> gym.Env:
         if self.continue_training:
             return restore_env(self.env_name, config=config, stats=get_saved_stats(stats_path=self.stats_path))
         return gym.make(self.env_name)
@@ -155,7 +155,7 @@ class TrainingManager:
             if self.norm_reward:
                 self.env = NormRewWrapper(self.env)
             if self.state_stack > 1:
-                self.env = gym.wrappers.FrameStack(self.env, self.state_stack)
+                self.env = gym.wrappers.FrameStackObservation(self.env, self.state_stack)
             model = ALGORITHMS[self.algo](
                 env=self.env,
                 tensorboard_log=self.tensorboard_log,
@@ -175,7 +175,7 @@ class TrainingManager:
         try:
             if self.is_websocket:
                 ioloop, server = run_socket(port=find_free_port(), routes=get_routes(env=self.env))
-                self.env.connection_event.wait()
+                self.env.unwrapped.connection_event.wait()
             model.learn(
                 total_timesteps=self.n_timesteps,
                 callback=checkpoint_callback,

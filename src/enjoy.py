@@ -58,16 +58,17 @@ def enjoy() -> None:
     try:
         if is_websocket:
             ioloop, server = run_socket(port=find_free_port(), routes=get_routes(env=env))
-            env.connection_event.wait()
+            env.unwrapped.connection_event.wait()
         while True:
-            obs = env.reset()
+            obs, info = env.reset()
             done = False
 
             while not done:
                 action, _states = model.predict(observation=obs, deterministic=args.deterministic)
-                obs, reward, done, info = env.step(action)
+                obs, reward, terminated, truncated, info = env.step(action)
+                done = terminated or truncated
                 if not is_websocket:
-                    env.render(mode="human")
+                    env.render()
     except KeyboardInterrupt:
         print("Execution stopped by user.")
 

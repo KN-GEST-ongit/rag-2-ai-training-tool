@@ -1,11 +1,19 @@
---extra-index-url https://download.pytorch.org/whl/cu113
+--extra-index-url https://download.pytorch.org/whl/cu124
 
-torch==1.11.0+cu113
-numpy==1.26.4
-pyglet==1.5.*
-gym[box2d]==0.21.0
-matplotlib
-stable-baselines3[extra]==1.5.0
-sb3_contrib==1.5.0
-tornado
-PyYAML
+torch==2.7.1
+torchvision==0.22.1
+numpy==2.0.2
+gymnasium==1.2.3
+shimmy==2.0.0
+stable-baselines3[extra]==2.7.1
+sb3-contrib==2.7.1
+tornado==6.4.0
+websockets==12.0
+matplotlib==3.9.2
+pandas==2.2.3
+opencv-python==4.10.0.84
+tensorboard==2.18.0
+tqdm==4.66.0
+PyYAML==6.0.2
+psutil==6.0.0
+click==8.1.0

@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from gym import Env
+from gymnasium import Env
 import threading
 
 from threading import Event
@@ -11,13 +11,13 @@ logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s -
 
 
 class InterruptableEvent(threading.Event):
-    def wait(self, timeout=None):
+    def wait(self, timeout: float | None = None) -> bool:
         wait = super().wait  # get once, use often
         if timeout is None:
             while not wait(0.01):
                 pass
-        else:
-            wait(timeout)
+            return True
+        return wait(timeout)
 
 
 class WebsocketEnv(Env, ABC):
@@ -74,6 +74,15 @@ class WebsocketEnv(Env, ABC):
         if not self._first_step:
             self._timeout = 5
         return self._timeout
+
+    @abstractmethod
+    def reset(self, *, seed: int | None = None, options: dict | None = None) -> tuple[np.array, dict]:
+        super().reset(seed=seed)
+        return self.curr_observation, {}
+
+    @abstractmethod
+    def step(self, action) -> tuple[np.array, float, bool, bool, dict]:
+        raise NotImplementedError
 
     @final
     def get_observation(self) -> np.array:
